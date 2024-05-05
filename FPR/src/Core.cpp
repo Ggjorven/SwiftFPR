@@ -7,6 +7,7 @@
 
 void FPRCore::OnAttach()
 {
+	m_Scene = Scene::Create();
 }
 
 void FPRCore::OnDetach()
@@ -16,6 +17,7 @@ void FPRCore::OnDetach()
 void FPRCore::OnUpdate(float deltaTime)
 {
 	// Note(Jorben): All of this below is just to show some stats in the titlebar
+	// I'm not using ImGui since it eats away at frametimes too much.
 	static float timer = 0.0f;
 	static uint32_t FPS = 0;
 	static uint32_t tempFPS = 0;
@@ -29,16 +31,21 @@ void FPRCore::OnUpdate(float deltaTime)
 		timer = 0.0f;
 		tempFPS = 0u;
 	}
+
+	m_Scene->OnUpdate(deltaTime);
 }
 
 void FPRCore::OnRender()
 {
+	m_Scene->OnRender();
 }
 
 void FPRCore::OnEvent(Event& e)
 {
+	m_Scene->OnEvent(e);
 }
 
 void FPRCore::OnImGuiRender()
 {
+	m_Scene->OnImGuiRender();
 }

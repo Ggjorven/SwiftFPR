@@ -87,6 +87,10 @@ Dependencies =
 	Stb_image =
 	{
 		IncludeDir = "%{wks.location}/vendor/stb/include"
+	},
+	EnTT = 
+	{
+		IncludeDir = "%{wks.location}/vendor/entt/include"
 	}
 }
 ------------------------------------------------------------------------------

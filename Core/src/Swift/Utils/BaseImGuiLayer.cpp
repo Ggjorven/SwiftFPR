@@ -10,12 +10,15 @@
 namespace Swift
 {
 
+	static BaseImGuiLayer* s_Instance = nullptr;
+
 	BaseImGuiLayer* BaseImGuiLayer::Create()
 	{
 		switch (RendererSpecification::API)
 		{
 		case RendererSpecification::RenderingAPI::Vulkan:
-			return new VulkanImGuiLayer();
+			s_Instance = new VulkanImGuiLayer();
+			return s_Instance;
 
 		default:
 			APP_LOG_ERROR("Invalid API selected.");
@@ -23,6 +26,11 @@ namespace Swift
 		}
 
 		return nullptr;
+	}
+
+	BaseImGuiLayer* BaseImGuiLayer::Get()
+	{
+		return s_Instance;
 	}
 
 }

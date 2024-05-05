@@ -2,6 +2,8 @@
 
 #include <Swift/Core/Layer.hpp>
 
+#include "FPR/Scene.hpp"
+
 using namespace Swift;
 
 class FPRCore : public Layer
@@ -14,4 +16,7 @@ public:
 	void OnRender() override;
 	void OnEvent(Event& e) override;
 	void OnImGuiRender() override;
+
+private:
+	Ref<Scene> m_Scene = nullptr;
 };

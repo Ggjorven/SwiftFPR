@@ -28,6 +28,7 @@ namespace Swift
 
 		static void Submit(RenderFunction function);
 		static void SubmitFree(FreeFunction function);
+		static void SubmitUI(UIFunction function);
 
 		static void Wait();
 

@@ -27,6 +27,7 @@ namespace Swift
 
 		virtual void Submit(RenderFunction function) = 0;
 		virtual void SubmitFree(FreeFunction function) = 0;
+		virtual void SubmitUI(UIFunction function) = 0;
 
 		virtual void Wait() = 0;
 

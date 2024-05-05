@@ -9,6 +9,7 @@ namespace Swift
 
 	typedef std::function<void()> RenderFunction;
 	typedef std::function<void()> FreeFunction;
+	typedef std::function<void()> UIFunction;
 
 	struct RendererSpecification
 	{

@@ -6,27 +6,29 @@
 #include <Swift/Renderer/Renderer.hpp>
 
 // Depth
-Ref<Pipeline>			Resources::Depth::Pipeline = nullptr;
-Ref<RenderPass>			Resources::Depth::RenderPass = nullptr;
-Ref<DescriptorSets>		Resources::Depth::DescriptorSets = nullptr;
+Ref<Pipeline>				Resources::Depth::Pipeline = nullptr;
+Ref<RenderPass>				Resources::Depth::RenderPass = nullptr;
+Ref<DescriptorSets>			Resources::Depth::DescriptorSets = nullptr;
 
 // LightCulling
-Ref<Pipeline>			Resources::LightCulling::Pipeline = nullptr;
-Ref<DescriptorSets>		Resources::LightCulling::DescriptorSets = nullptr;
+Ref<Pipeline>				Resources::LightCulling::Pipeline = nullptr;
+Ref<DescriptorSets>			Resources::LightCulling::DescriptorSets = nullptr;
 
-Ref<ComputeShader>		Resources::LightCulling::ComputeShader = nullptr;
-Ref<CommandBuffer>		Resources::LightCulling::CommandBuffer = nullptr;
+Ref<ComputeShader>			Resources::LightCulling::ComputeShader = nullptr;
+Ref<CommandBuffer>			Resources::LightCulling::CommandBuffer = nullptr;
 
-Ref<StorageBuffer>		Resources::LightCulling::LightsBuffer = nullptr;
-Ref<StorageBuffer>		Resources::LightCulling::LightVisibilityBuffer = nullptr;
+Ref<StorageBuffer>			Resources::LightCulling::LightsBuffer = nullptr;
+Ref<StorageBuffer>			Resources::LightCulling::LightVisibilityBuffer = nullptr;
 
 // Shading
-Ref<Pipeline>			Resources::Shading::Pipeline = nullptr;
-Ref<RenderPass>			Resources::Shading::RenderPass = nullptr;
-Ref<DescriptorSets>		Resources::Shading::DescriptorSets = nullptr;
+Ref<Pipeline>				Resources::Shading::Pipeline = nullptr;
+Ref<RenderPass>				Resources::Shading::RenderPass = nullptr;
+Ref<DescriptorSets>			Resources::Shading::DescriptorSets = nullptr;
 
 // Resources
-Ref<UniformBuffer>		Resources::SceneBuffer = nullptr;
+Ref<UniformBuffer>			Resources::SceneBuffer = nullptr;
+Ref<DynamicUniformBuffer>	Resources::ModelBuffer = nullptr;
+Ref<UniformBuffer>			Resources::CameraBuffer = nullptr;
 
 void Resources::Init()
 {
@@ -36,6 +38,7 @@ void Resources::Init()
 	InitDepth(compiler, cacher);
 	InitLightCulling(compiler, cacher);
 	InitShading(compiler, cacher);
+	InitResources();
 }
 
 void Resources::Destroy()
@@ -62,6 +65,18 @@ void Resources::Destroy()
 
 	// Resources
 	Resources::SceneBuffer.reset();
+	Resources::ModelBuffer.reset();
+	Resources::CameraBuffer.reset();
+}
+
+void Resources::Resize(uint32_t width, uint32_t height)
+{
+	// LightCulling
+	{
+		uint32_t tiles = (uint32_t)(((float)width / TILE_SIZE) * ((float)height / TILE_SIZE));
+		size_t size = ((sizeof(uint32_t) + (sizeof(char) * 12) + (sizeof(uint32_t) * MAX_POINTLIGHTS_PER_TILE))) * tiles;
+		Resources::LightCulling::LightVisibilityBuffer = StorageBuffer::Create(size);
+	}
 }
 
 void Resources::InitDepth(Ref<ShaderCompiler> compiler, Ref<ShaderCacher> cacher)
@@ -127,15 +142,13 @@ void Resources::InitLightCulling(Ref<ShaderCompiler> compiler, Ref<ShaderCacher>
 	});
 
 	{
-		// TODO: Implement
-		/*
-		size_t size = sizeof(uint32_t) + (sizeof(char) * 12) + (sizeof(PointLight) * MAX_POINTLIGHTS);
+		size_t size = sizeof(uint32_t) + (sizeof(char) * 12) + (sizeof(ShaderPointLight) * MAX_POINTLIGHTS);
 		Resources::LightCulling::LightsBuffer = StorageBuffer::Create(size);
 
 		auto& window = Application::Get().GetWindow();
 		uint32_t tiles = (uint32_t)(((float)window.GetWidth() / TILE_SIZE) * ((float)window.GetHeight() / TILE_SIZE));
-		Resources::LightCulling::LightVisibilityBuffer = StorageBuffer::Create((sizeof(PointLightVisibilty) * tiles) + sizeof(uint32_t) * 4); // uint32_t for amount * 4 to account for padding
-		*/
+		size = ((sizeof(uint32_t) + (sizeof(char) * 12) + (sizeof(uint32_t) * MAX_POINTLIGHTS_PER_TILE))) * tiles;
+		Resources::LightCulling::LightVisibilityBuffer = StorageBuffer::Create(size);
 	}
 
 	CommandBufferSpecification cmdBufSpecs = {};
@@ -197,9 +210,17 @@ void Resources::InitShading(Ref<ShaderCompiler> compiler, Ref<ShaderCacher> cach
 	PipelineSpecification pipelineSpecs = {};
 	pipelineSpecs.Bufferlayout = MeshVertex::GetLayout();
 	pipelineSpecs.Polygonmode = PolygonMode::Fill;
-	pipelineSpecs.Cullingmode = CullingMode::Back;
+	pipelineSpecs.Cullingmode = CullingMode::None;
 	pipelineSpecs.LineWidth = 1.0f;
 	pipelineSpecs.Blending = false;
 
 	Resources::Shading::Pipeline = Pipeline::Create(pipelineSpecs, Resources::Shading::DescriptorSets, shader, Resources::Shading::RenderPass);
+}
+
+void Resources::InitResources()
+{
+	SceneBuffer = UniformBuffer::Create(sizeof(ShaderScene));
+
+	ModelBuffer = DynamicUniformBuffer::Create(PreAllocatedModels, sizeof(ShaderModel));
+	CameraBuffer = UniformBuffer::Create(sizeof(ShaderCamera));
 }

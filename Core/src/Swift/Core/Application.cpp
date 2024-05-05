@@ -81,7 +81,7 @@ namespace Swift
 				Renderer::BeginFrame();
 			}
 			{
-				APP_PROFILE_SCOPE("Update & Render");
+				APP_PROFILE_SCOPE("Update & Render Submit");
 				for (Layer* layer : m_LayerStack)
 				{
 					layer->OnUpdate(deltaTime);
@@ -92,12 +92,9 @@ namespace Swift
             // ImGui
             if (!m_Minimized)
             {
-                APP_PROFILE_SCOPE("ImGui");
-                
-                m_ImGuiLayer->Begin();
+                APP_PROFILE_SCOPE("ImGui Submit");
                 for (Layer* layer : m_LayerStack)
                     layer->OnImGuiRender();
-                m_ImGuiLayer->End();
             }
 
 			{

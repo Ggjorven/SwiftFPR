@@ -51,6 +51,11 @@ namespace Swift
 		s_RenderInstance->SubmitFree(function);
 	}
 
+	void Renderer::SubmitUI(UIFunction function)
+	{
+		s_RenderInstance->SubmitUI(function);
+	}
+
 	void Renderer::Wait()
 	{
 		s_RenderInstance->Wait();

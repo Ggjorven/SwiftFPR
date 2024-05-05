@@ -36,7 +36,8 @@ project "FPR"
 		"%{Dependencies.Assimp.IncludeDir}",
 		"%{Dependencies.ImGui.IncludeDir}",
 		"%{Dependencies.Tracy.IncludeDir}",
-		"%{Dependencies.VMA.IncludeDir}"
+		"%{Dependencies.VMA.IncludeDir}",
+		"%{Dependencies.EnTT.IncludeDir}"
 	}
 
 	links
