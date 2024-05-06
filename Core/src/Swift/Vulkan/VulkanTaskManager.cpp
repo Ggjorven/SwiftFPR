@@ -159,4 +159,19 @@ namespace Swift
 		}
 	}
 
+	void VulkanTaskManager::Reset()
+	{
+		std::scoped_lock<std::mutex> lock(s_SemaphoreMutex);
+		std::scoped_lock<std::mutex> lock2(s_FrameSemaphoreMutex);
+		std::scoped_lock<std::mutex> lock3(s_FenceMutex);
+
+		constexpr const uint32_t framesInFlight = (uint32_t)RendererSpecification::BufferCount;
+		for (uint32_t i = 0; i < framesInFlight; i++)
+		{
+			s_Semaphores[i].Clear();
+			s_FrameSemaphores[i].Clear();
+			s_Fences[i].Clear();
+		}
+	}
+
 }

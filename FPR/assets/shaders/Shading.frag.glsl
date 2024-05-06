@@ -59,7 +59,9 @@ vec3 CalculatePointLight(vec3 fragPos, vec3 normal, PointLight light)
 {
     vec3 lightDir = normalize(light.Position - fragPos);
     float distance = length(light.Position - fragPos);
-    float attenuation = 1.0 / (1.0 + 0.01 * distance + 0.01 * distance * distance);
+    
+    // Calculate attenuation based on distance and light radius
+    float attenuation = clamp(1.0 - distance / light.Radius, 0.0, 1.0);
 
     // Lambert's cosine law
     float diff = max(dot(normal, lightDir), 0.0);
@@ -67,6 +69,7 @@ vec3 CalculatePointLight(vec3 fragPos, vec3 normal, PointLight light)
 
     return diffuse;
 }
+
 
 void main() 
 {
@@ -76,8 +79,9 @@ void main()
     vec3 resultColor = texture(u_Albedo, v_TexCoord).rgb; // base color
 
     // Calculate tile index
-    ivec2 tileIndex = ivec2(gl_FragCoord.xy / TILE_SIZE);
-    int index = tileIndex.x + tileIndex.y * int(u_Scene.ScreenSize.x / TILE_SIZE);
+    ivec2 tileID = ivec2(gl_FragCoord) / ivec2(TILE_SIZE, TILE_SIZE);
+    uint tilesX = (u_Scene.ScreenSize.x + TILE_SIZE - 1) / TILE_SIZE;
+	uint index = tileID.y * tilesX + tileID.x;
 
     // Iterate through visible point lights for this tile
     for (uint i = 0; i < u_Visibility.VisiblePointLights[index].Count; i++) 

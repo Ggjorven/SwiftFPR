@@ -71,11 +71,21 @@ void Resources::Destroy()
 
 void Resources::Resize(uint32_t width, uint32_t height)
 {
+	// Depth
+	{
+		Resources::Depth::RenderPass->Resize(width, height);
+	}
+
 	// LightCulling
 	{
-		uint32_t tiles = (uint32_t)(((float)width / TILE_SIZE) * ((float)height / TILE_SIZE));
-		size_t size = ((sizeof(uint32_t) + (sizeof(char) * 12) + (sizeof(uint32_t) * MAX_POINTLIGHTS_PER_TILE))) * tiles;
+		uint32_t tiles = ((Application::Get().GetWindow().GetWidth() + TILE_SIZE - 1) / TILE_SIZE) * ((Application::Get().GetWindow().GetHeight() + TILE_SIZE - 1) / TILE_SIZE);
+		size_t size = ((sizeof(uint32_t) + (sizeof(char) * 12) + ((sizeof(uint32_t) + (sizeof(char) * 12)) * MAX_POINTLIGHTS_PER_TILE))) * tiles;
 		Resources::LightCulling::LightVisibilityBuffer = StorageBuffer::Create(size);
+	}
+
+	// Shading
+	{
+		Resources::Shading::RenderPass->Resize(width, height);
 	}
 }
 
@@ -146,8 +156,8 @@ void Resources::InitLightCulling(Ref<ShaderCompiler> compiler, Ref<ShaderCacher>
 		Resources::LightCulling::LightsBuffer = StorageBuffer::Create(size);
 
 		auto& window = Application::Get().GetWindow();
-		uint32_t tiles = (uint32_t)(((float)window.GetWidth() / TILE_SIZE) * ((float)window.GetHeight() / TILE_SIZE));
-		size = ((sizeof(uint32_t) + (sizeof(char) * 12) + (sizeof(uint32_t) * MAX_POINTLIGHTS_PER_TILE))) * tiles;
+		uint32_t tiles = ((Application::Get().GetWindow().GetWidth() + TILE_SIZE - 1) / TILE_SIZE) * ((Application::Get().GetWindow().GetHeight() + TILE_SIZE - 1) / TILE_SIZE);
+		size = ((sizeof(uint32_t) + (sizeof(char) * 12) + ((sizeof(uint32_t) + (sizeof(char) * 12)) * MAX_POINTLIGHTS_PER_TILE))) * tiles;
 		Resources::LightCulling::LightVisibilityBuffer = StorageBuffer::Create(size);
 	}
 

@@ -31,6 +31,9 @@ public:
 	static Ref<Scene> Create();
 
 private:
+	void InitHeatMap();
+	void RenderHeatMap();
+
 	const glm::uvec2 GetTileCount() const;
 
 	bool OnResize(WindowResizeEvent& e);
@@ -39,4 +42,13 @@ private:
 	entt::registry m_Registry = {};
 
 	Ref<Camera> m_Camera = nullptr;
+
+	// Heatmap
+	Ref<Image2D> m_HeatAttachment = nullptr;
+
+	Ref<Pipeline> m_HeatPipeline = nullptr;
+	Ref<DescriptorSets> m_HeatSets = nullptr;
+
+	Ref<CommandBuffer> m_HeatCommand = nullptr;
+	Ref<ComputeShader> m_HeatShader = nullptr;
 };

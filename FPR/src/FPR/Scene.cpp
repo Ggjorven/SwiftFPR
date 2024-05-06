@@ -27,9 +27,9 @@ Scene::Scene()
 		mesh.Albedo = Image2D::Create({"assets/objects/viking_room.png"});
 
 		PointLightComponent light = {};
-		light.Colour = { 1.0f, 0.0f, 0.0f };
-		light.Intensity = 1.0f;
-		light.Radius = 5.0f;
+		light.Colour = { 0.0f, 1.0f, 1.0f };
+		light.Intensity = 0.5f;
+		light.Radius = 5.00f;
 
 		// Viking mesh
 		entt::entity viking = m_Registry.create();
@@ -38,9 +38,14 @@ Scene::Scene()
 
 		// Light
 		entt::entity pointLight = m_Registry.create();
+		
+		transform.Position = { 0.5f, 0.5f, 0.5f };
+
 		m_Registry.emplace<TransformComponent>(pointLight, transform);
 		m_Registry.emplace<PointLightComponent>(pointLight, light);
 	}
+
+	InitHeatMap();
 }
 
 Scene::~Scene()
@@ -100,6 +105,8 @@ void Scene::OnUpdate(float deltaTime)
 			light.Colour = pointLight.Colour;
 			light.Radius = pointLight.Radius;
 			light.Intensity = pointLight.Intensity;
+
+			lights[i] = light;
 
 			i++;
 		}
@@ -180,6 +187,9 @@ void Scene::OnRender()
 		Resources::LightCulling::CommandBuffer->Submit(Queue::Compute);
 	});
 
+	// Heatmap
+	RenderHeatMap();
+
 	// Final shading
 	Renderer::Submit([this]()
 	{
@@ -236,6 +246,69 @@ Ref<Scene> Scene::Create()
 	return RefHelper::Create<Scene>();
 }
 
+void Scene::InitHeatMap()
+{
+	auto& window = Application::Get().GetWindow();
+	ImageSpecification imageSpecs = ImageSpecification(window.GetWidth(), window.GetHeight(), ImageUsageFlags::Colour | ImageUsageFlags::NoMipMaps | ImageUsageFlags::Storage);
+	imageSpecs.Layout = ImageLayout::General;
+
+	m_HeatAttachment = Image2D::Create(imageSpecs);
+
+	Ref<ShaderCompiler> compiler = ShaderCompiler::Create();
+	Ref<ShaderCacher> cacher = ShaderCacher::Create();
+
+	m_HeatSets = DescriptorSets::Create(
+	{
+		// Set 0 
+		{ 1, { 0, {
+			{ DescriptorType::StorageImage, 0, "u_Image", ShaderStage::Compute },
+			{ DescriptorType::StorageBuffer, 1, "u_Visibility", ShaderStage::Compute }
+		}}},
+
+		// Set 1 
+		{ 1, { 1, {
+			{ DescriptorType::UniformBuffer, 0, "u_Scene", ShaderStage::Compute }
+		}}},
+	});
+
+	CommandBufferSpecification cmdSpecs = {};
+	cmdSpecs.Usage = CommandBufferUsage::Sequence;
+
+	m_HeatCommand = CommandBuffer::Create(cmdSpecs);
+
+	ShaderSpecification shaderSpecs = {};
+	shaderSpecs.Compute = cacher->GetLatest(compiler, "assets/shaders/caches/Heatmap.comp.cache", "assets/shaders/Heatmap.comp.glsl", ShaderStage::Compute);
+
+	m_HeatShader = ComputeShader::Create(shaderSpecs);
+	m_HeatPipeline = Pipeline::Create({ }, m_HeatSets, m_HeatShader);
+}
+
+void Scene::RenderHeatMap()
+{
+	Renderer::Submit([this]() 
+	{
+		const glm::uvec2 tiles = GetTileCount();
+		auto& set0 = m_HeatSets->GetSets(0)[0];
+		auto& set1 = m_HeatSets->GetSets(1)[0];
+
+		m_HeatCommand->Begin();
+
+		m_HeatAttachment->Upload(set0, m_HeatSets->GetLayout(0).GetDescriptorByName("u_Image"));
+		Resources::LightCulling::LightVisibilityBuffer->Upload(set0, m_HeatSets->GetLayout(0).GetDescriptorByName("u_Visibility"));
+		Resources::SceneBuffer->Upload(set1, m_HeatSets->GetLayout(1).GetDescriptorByName("u_Scene"));
+
+		m_HeatPipeline->Use(m_HeatCommand, PipelineBindPoint::Compute);
+
+		set0->Bind(m_HeatPipeline, m_HeatCommand, PipelineBindPoint::Compute);
+		set1->Bind(m_HeatPipeline, m_HeatCommand, PipelineBindPoint::Compute);
+
+		m_HeatShader->Dispatch(m_HeatCommand, tiles.x, tiles.y, 1);
+
+		m_HeatCommand->End();
+		m_HeatCommand->Submit(Queue::Compute);
+	});
+}
+
 const glm::uvec2 Scene::GetTileCount() const
 {
 	glm::uvec2 tiles = {};
@@ -246,6 +319,10 @@ const glm::uvec2 Scene::GetTileCount() const
 
 bool Scene::OnResize(WindowResizeEvent& e)
 {
+	Renderer::GetDepthImage()->Transition(ImageLayout::Undefined, ImageLayout::Depth);
+
+	m_HeatAttachment->Resize(e.GetWidth(), e.GetHeight());
+	
 	Resources::Resize(e.GetWidth(), e.GetHeight());
 
 	return false;

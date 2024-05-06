@@ -27,7 +27,7 @@ void FPRCore::OnUpdate(float deltaTime)
 	if (timer >= 1.0f)
 	{
 		FPS = (uint32_t)((float)tempFPS / timer);
-		Application::Get().GetWindow().SetTitle(fmt::format("SwiftFPR | FPS: {0} | Frametime: {1:.3f}ms", FPS, timer / (float)FPS * 1000.0f));
+		Application::Get().GetWindow().SetTitle(fmt::format("SwiftFPR | FPS: {0} | Frametime: {1:.3f}ms  -  Width: {2} | Height: {3}", FPS, timer / (float)FPS * 1000.0f, Application::Get().GetWindow().GetWidth(), Application::Get().GetWindow().GetHeight()));
 		timer = 0.0f;
 		tempFPS = 0u;
 	}

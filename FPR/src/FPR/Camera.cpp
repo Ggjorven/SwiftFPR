@@ -74,7 +74,7 @@ void Camera::UpdateArcBall(float deltaTime)
 		{
 			glm::vec2 delta = position - lastPosition;
 
-			float dTheta = delta.x * m_Speed;
+			float dTheta = -delta.x * m_Speed;
 			float dPhi = delta.y * m_Speed;
 
 			theta += dTheta;

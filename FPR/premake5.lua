@@ -60,6 +60,11 @@ project "FPR"
 			"APP_PLATFORM_WINDOWS",
 			"GLFW_INCLUDE_NONE"
 		}
+		
+		includedirs
+		{
+			"%{Dependencies.Vulkan.Windows.IncludeDir}"
+		}
 
 	filter "configurations:Debug"
 		defines "APP_DEBUG"
