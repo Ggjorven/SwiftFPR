@@ -32,13 +32,6 @@ struct PointLightVisibilty
     uint Count;
     uint Indices[MAX_POINTLIGHTS_PER_TILE];
 };
-
-// Extra
-struct Sphere
-{
-	vec3 c;	 	// Center point.
-	float r;	// Radius.
-};
 ///////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////
@@ -71,17 +64,6 @@ layout(std140, set = 1, binding = 1) uniform SceneUniform
 } u_Scene;
 ///////////////////////////////////////////////////////////////////////
 
-bool TestFrustumSides(vec3 c, float r, vec3 plane0, vec3 plane1, vec3 plane2, vec3 plane3)
-{
-	bool intersectingOrInside0 = dot(c, plane0) < r;
-	bool intersectingOrInside1 = dot(c, plane1) < r;
-	bool intersectingOrInside2 = dot(c, plane2) < r;
-	bool intersectingOrInside3 = dot(c, plane3) < r;
-
-	return (intersectingOrInside0 && intersectingOrInside1 &&
-		intersectingOrInside2 && intersectingOrInside3);
-}
-
 // From XeGTAO
 float ScreenSpaceToViewSpaceDepth(const float screenDepth)
 {
@@ -92,6 +74,8 @@ float ScreenSpaceToViewSpaceDepth(const float screenDepth)
 }
 
 // Shared values between all the threads in the group
+shared mat4 viewProjection;
+
 shared uint minDepthInt;
 shared uint maxDepthInt;
 shared uint visiblePointLightCount;
@@ -111,6 +95,8 @@ void main()
     // Initialize shared global values for depth and light count
     if (gl_LocalInvocationIndex == 0)
     {
+		viewProjection = u_Camera.Camera.Projection * u_Camera.Camera.View;
+
 		minDepthInt = 0xFFFFFFFF;
 		maxDepthInt = 0;
 		visiblePointLightCount = 0;
@@ -151,7 +137,7 @@ void main()
 		// Transform the first four planes
 		for (uint i = 0; i < 4; i++)
 		{
-		    frustumPlanes[i] *= u_Camera.Camera.View * u_Camera.Camera.Projection;
+		    frustumPlanes[i] *= viewProjection;
 		    frustumPlanes[i] /= length(frustumPlanes[i].xyz);
 		}
 

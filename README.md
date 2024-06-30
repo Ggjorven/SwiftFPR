@@ -42,7 +42,7 @@ SwiftFPR is distributed under the Apache 2.0 License. See the `LICENSE.txt` file
 
 ## Contact
 
-For any inquiries or support related to SwiftFPR, you can reach out to the project maintainer via email at [maintainer@email.com](mailto:maintainer@email.com) or through Discord at [discordusername#1234](https://discord.com).
+For any inquiries or support related to SwiftFPR, you can reach out to the project maintainer via email at [jorbenvanderwal@gmail.com](mailto:jorbenvanderwal@gmail.com) or through Discord at ggjorven#0914.
 
 ## Acknowledgments
 
